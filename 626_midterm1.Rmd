@@ -1,0 +1,245 @@
+---
+title: "Biostat 626 Midterm 1 Jingyu Wang"
+output:
+  html_document:
+    df_print: paged
+date: "2023-04-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+rm(list=ls())
+```
+
+# Load the packages
+```{r}
+library(tidyverse)
+library(e1071)
+library(FNN)
+library(MASS)
+library(rpart)
+library(randomForest)
+library(ggplot2)
+```
+
+## Read the data
+```{r}
+train_dat <- read.table("training_data.txt", sep = "", header = TRUE)
+test_dat <- read.table("test_data.txt", sep = "", header = TRUE)
+```
+
+## EDA
+```{r}
+# check training data shape
+train_shape <- dim(train_dat)
+cat("Dimensions of the train data:", train_shape[1], "rows and", train_shape[2], "columns\n")
+```
+
+```{r}
+# check test data shape
+test_shape <- dim(test_dat)
+cat("Dimensions of the train data:", test_shape[1], "rows and", test_shape[2], "columns\n")
+```
+
+```{r}
+# check missing values in training data
+colSums(is.na(train_dat))
+```
+
+```{r}
+# check missing values in training data
+colSums(is.na(test_dat))
+```
+
+
+## Data Cleaning
+```{r}
+train_dat <- train_dat %>%
+  mutate(type1 = ifelse(activity %in% c(1:3), 1, 0),
+         type2 = ifelse(activity %in% c(7:12), 7, activity))
+```
+
+## Build models
+### task1
+```{r}
+# split data
+set.seed(123)
+index <- sample(1:nrow(train_dat), nrow(train_dat)*0.7)
+train1 <- train_dat[index, -c(1:2,565)]
+test1 <- train_dat[-index, -c(1:2,565)]
+```
+
+```{r}
+# svm
+# fit the model on the training set
+svm_mod_1 <- svm(as.factor(type1)~., data = train1)
+# make predictions on the test data
+svm_pred_1 <- predict(svm_mod_1, test1)
+# computing model accuracy rate
+svm_acc_1 <- mean(svm_pred_1 == test1$type1)
+svm_acc_1
+```
+
+```{r}
+# knn
+# fit the model on the training set and make predictions on the test data
+knn_pred_1 <- knn(train = train1[,-1], cl = train1$type1, test = test1[,-1])
+# computing model accuracy rate
+knn_acc_1 <- mean(knn_pred_1 == test1$type1)
+knn_acc_1
+```
+
+```{r}
+# lda
+# fit the model on the training set
+lda_mod_1 <- lda(as.factor(type1)~., data = train1)
+# make predictions on the test data
+lda_pred_1 <- predict(lda_mod_1, test1)$class
+# computing model accuracy rate
+lda_acc_1 <- mean(lda_pred_1 == test1$type1)
+lda_acc_1
+```
+
+
+```{r}
+# descision tree
+# fit the model on the training set
+tree_mod_1 <- rpart(as.factor(type1)~., data = train1)
+# make predictions on the test data
+tree_pred_1 <- predict(tree_mod_1, test1, type = "class")
+# computing model accuracy rate
+tree_acc_1 <- mean(tree_pred_1 == test1$type1)
+tree_acc_1
+```
+
+
+```{r}
+# compare different methods
+acc_df_1 <- data.frame(Method = c("SVM", "KNN", "LDA","DT"),
+                     Accuray = c(svm_acc_1, knn_acc_1, lda_acc_1, tree_acc_1))
+acc_df_1 
+```
+
+The best algorithms of task1 are KNN and LDA.
+
+## Task2
+```{r}
+# split data
+set.seed(123)
+index <- sample(1:nrow(train_dat), nrow(train_dat)*0.7)
+train2 <- train_dat[index, -c(1:2,564)]
+test2 <- train_dat[-index, -c(1:2,564)]
+```
+
+```{r}
+# svm
+# fit the model on the training set
+svm_mod_2 <- svm(as.factor(type2)~., data = train2)
+# make predictions on the test data
+svm_pred_2 <- predict(svm_mod_2, test2)
+# computing model accuracy rate
+svm_acc_2 <- mean(svm_pred_2 == test2$type2)
+svm_acc_2
+```
+
+
+```{r}
+# knn
+# fit the model on the training set and make predictions on the test data
+knn_pred_2 <- knn(train = train2[,-1], cl = train2$type2, test = test2[,-1])
+# computing model accuracy rate
+knn_acc_2 <- mean(knn_pred_2 == test2$type2)
+knn_acc_2
+```
+
+```{r}
+# lda
+# fit the model on the training set
+lda_mod_2 <- lda(as.factor(type2)~., data = train2)
+# make predictions on the test data
+lda_pred_2 <- predict(lda_mod_2, test2)$class
+# computing model accuracy rate
+lda_acc_2 <- mean(lda_pred_2 == test2$type2)
+lda_acc_2
+```
+
+```{r}
+# decision tree
+# fit the model on the training set
+dt_mod_2 <- rpart(as.factor(type2)~., data = train2)
+# make predictions on the test data
+dt_pred_2 <- predict(dt_mod_2, test2, type = "class")
+# computing model accuracy rate
+dt_acc_2 <- mean(dt_pred_2 == test2$type2)
+dt_acc_2
+```
+
+```{r}
+# random forest
+# fit the model on the training set
+rf_mod_2 <- randomForest(as.factor(type2)~., data = train2, ntree = 500, importance = TRUE)
+# make predictions on the test data
+rf_pred_2 <- predict(rf_mod_2, test2)
+# computing model accuracy rate
+rf_acc_2 <- mean(rf_pred_2 == test2$type2)
+rf_acc_2
+```
+
+
+```{r}
+# compare different methods
+acc_df <- data.frame(Method = c("SVM", "KNN", "LDA","DT","RF"),
+                     Accuray = c(svm_acc_2, knn_acc_2, lda_acc_2, dt_acc_2, rf_acc_2))
+acc_df 
+```
+
+The best algorithm of task2 is also KNN, but random forest also performed very well.
+
+# Final algorithm
+## Task1
+```{r}
+# fit the model on the training set
+knn_train_pred1 <- knn(train = train_dat[,-c(1,2,564,565)], cl = train_dat$type1, test = train_dat[,-c(1,2,564,565)])
+
+# computing model accuracy rate
+tree_train_acc1 <- mean(knn_train_pred1 == train_dat$type1)
+tree_train_acc1
+
+# make predictions on the train data
+knn_test_pred1 <- knn(train = train_dat[,-c(1,2,564,565)], cl = train_dat$type1, test = test_dat[,-1])
+
+# save the results as txt file
+write.table(knn_test_pred1, "binary_746766.txt", sep = "\t", quote = F, 
+            col.names = FALSE, row.names = FALSE)
+```
+
+## Task2
+```{r}
+# fit the model on the training set
+knn_train_pred2 <- knn(train = train_dat[,-c(1,2,564,565)], cl = train_dat$type2, test = train_dat[,-c(1,2,564,565)])
+
+# make predictions on the train data
+knn_test_pred2 <- knn(train = train_dat[,-c(1,2,564,565)], cl = train_dat$type2, test = test_dat[,-1])
+
+# save the results as txt file
+write.table(knn_test_pred2, "multiclass_7467.txt", sep = "\t", quote = F, 
+            col.names = FALSE, row.names = FALSE)
+```
+
+# Task 2 Final model: Random Forest
+```{r}
+# fit the model on the train dataset
+rf_train_mod <- randomForest(as.factor(type2)~., data = train2, ntree = 500, importance = TRUE)
+
+# make predictions on the train data
+rf_train_pred2 <- predict(rf_train_mod, train2)
+
+# make predictions on the test data
+rf_test_pred2 <- predict(rf_train_mod, test_dat[,-1])
+
+# save the results as txt file
+write.table(rf_test_pred2, "multiclass_746766.txt", sep = "\t", quote = F,
+            col.names = FALSE, row.names = FALSE)
+
+```
+
