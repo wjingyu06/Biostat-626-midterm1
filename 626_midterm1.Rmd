@@ -3,7 +3,7 @@ title: "Biostat 626 Midterm 1 Jingyu Wang"
 output:
   html_document:
     df_print: paged
-date: "2023-04-08"
+date: "2023-04-15"
 ---
 
 ```{r setup, include=FALSE}
@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 rm(list=ls())
 ```
 
-# Load the packages
+## Load the packages
 ```{r}
 library(tidyverse)
 library(e1071)
@@ -52,7 +52,7 @@ colSums(is.na(test_dat))
 ```
 
 
-## Data Cleaning
+## Data Preprocessing
 ```{r}
 train_dat <- train_dat %>%
   mutate(type1 = ifelse(activity %in% c(1:3), 1, 0),
@@ -188,15 +188,15 @@ rf_acc_2
 
 ```{r}
 # compare different methods
-acc_df <- data.frame(Method = c("SVM", "KNN", "LDA","DT","RF"),
+acc_df_2 <- data.frame(Method = c("SVM", "KNN", "LDA","DT","RF"),
                      Accuray = c(svm_acc_2, knn_acc_2, lda_acc_2, dt_acc_2, rf_acc_2))
-acc_df 
+acc_df_2 
 ```
 
 The best algorithm of task2 is also KNN, but random forest also performed very well.
 
 # Final algorithm
-## Task1
+## Task 1 Final model: KNN
 ```{r}
 # fit the model on the training set
 knn_train_pred1 <- knn(train = train_dat[,-c(1,2,564,565)], cl = train_dat$type1, test = train_dat[,-c(1,2,564,565)])
@@ -213,7 +213,7 @@ write.table(knn_test_pred1, "binary_746766.txt", sep = "\t", quote = F,
             col.names = FALSE, row.names = FALSE)
 ```
 
-## Task2
+## Task 2
 ```{r}
 # fit the model on the training set
 knn_train_pred2 <- knn(train = train_dat[,-c(1,2,564,565)], cl = train_dat$type2, test = train_dat[,-c(1,2,564,565)])
